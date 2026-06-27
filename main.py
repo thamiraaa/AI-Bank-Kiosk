@@ -877,9 +877,46 @@ class ReviewScreen(BaseScreen):
 
         self.form_frame.grid_columnconfigure(1, weight=1)
 
-    # ── PDF Generation ───────────────────────────────────
-
     def _generate_pdf(self):
+        # ── SHOW PAYMENT POPUP FIRST ──
+        payment_window = ctk.CTkToplevel(self)
+        payment_window.title("Payment Required")
+        payment_window.geometry("500x350")
+        payment_window.attributes("-topmost", True)
+        payment_window.grab_set()  # Focus on popup
+
+        # Center the window
+        payment_window.update_idletasks()
+        x = (payment_window.winfo_screenwidth() // 2) - (500 // 2)
+        y = (payment_window.winfo_screenheight() // 2) - (350 // 2)
+        payment_window.geometry(f"+{x}+{y}")
+
+        # Content
+        ctk.CTkLabel(payment_window, text="💳 Payment Required",
+                     font=ctk.CTkFont(family=config.FONT_FAMILY, size=24, weight="bold"),
+                     text_color=config.COLOR_PRIMARY).pack(pady=(30, 10))
+
+        ctk.CTkLabel(payment_window, text="Please insert a ₹5 coin into the machine\nto print your form.",
+                     font=ctk.CTkFont(family=config.FONT_FAMILY, size=16),
+                     text_color=config.COLOR_TEXT).pack(pady=(10, 30))
+
+        def _on_coin_inserted():
+            payment_window.destroy()
+            self._process_pdf_generation()
+
+        # Simulate hardware coin inserted
+        ctk.CTkButton(payment_window, text="🪙 Simulate Coin Inserted",
+                      command=_on_coin_inserted,
+                      font=ctk.CTkFont(family=config.FONT_FAMILY, size=18, weight="bold"),
+                      fg_color=config.COLOR_SUCCESS, hover_color="#0BA070",
+                      text_color="#FFFFFF", height=55, width=280).pack(pady=10)
+
+        ctk.CTkButton(payment_window, text="Cancel",
+                      command=payment_window.destroy,
+                      font=ctk.CTkFont(family=config.FONT_FAMILY, size=14),
+                      fg_color="transparent", text_color=config.COLOR_ERROR, hover_color=config.COLOR_SURFACE).pack(pady=10)
+
+    def _process_pdf_generation(self):
         form_type = self.app.form_type.get()
         ft_cfg = config.FORM_TYPES.get(form_type, {})
 
